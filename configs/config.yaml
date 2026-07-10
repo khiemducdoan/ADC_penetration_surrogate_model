@@ -1,0 +1,25 @@
+defaults:
+  - simulation: diffusion_degradation
+  - sampling: default
+  - training: default
+  - _self_
+
+seed: 42
+
+output_dir: outputs
+dataset_path: ${output_dir}/dataset.npz
+checkpoint_path: ${output_dir}/surrogate_model.pt
+figures_dir: ${output_dir}/figures
+
+wandb:
+  enabled: true
+  project: adc-penetration-surrogate
+  entity: null
+  mode: online
+  tags: []
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: ${output_dir}/hydra/${now:%Y-%m-%d_%H-%M-%S}

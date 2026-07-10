@@ -11,17 +11,13 @@ Boundary conditions:
 Initial condition:
     c(x, 0) = 0
 
-This geometry mirrors the Krogh-cylinder boundary conditions used in
-Thurber & Wittrup (2012) for antibody transport: fixed concentration at the
-vessel wall, no-flux at the outer radius of the tissue cylinder.
-
 Two solution methods are provided:
   - analytical_transient_profile / steady_state_profile: exact (series)
     solution, valid for homogeneous D and r. Used to generate synthetic
     data quickly and to validate the numerical solver.
   - fdm_crank_nicolson: general implicit finite-difference solver. Needed
-    once D(x) or r(x) become spatially heterogeneous (Task 1.4), where the
-    analytical solution no longer applies.
+    once D(x) or r(x) become spatially heterogeneous, where the analytical
+    solution no longer applies.
 """
 from __future__ import annotations
 
@@ -35,8 +31,7 @@ def steady_state_profile(x: np.ndarray, D: float, r: float, c0: float, L: float)
 
     c_ss(x) = c0 * cosh((L - x) / lambda) / cosh(L / lambda),  lambda = sqrt(D / r)
 
-    `lambda` is the characteristic penetration depth (same quantity as in
-    Thurber's antibody-penetration analysis).
+    `lambda` is the characteristic penetration depth.
     """
     lam = np.sqrt(D / r)
     return c0 * np.cosh((L - x) / lam) / np.cosh(L / lam)

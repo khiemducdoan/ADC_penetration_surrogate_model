@@ -3,3 +3,10 @@ docs/
 papers/
 __pycache__/
 *.pyc
+*.egg-info/
+
+# Hydra run logs (dataset/checkpoints/figures under outputs/ are still tracked)
+outputs/hydra/
+
+# Weights & Biases local run logs
+wandb/

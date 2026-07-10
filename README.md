@@ -17,46 +17,72 @@ The pipeline has four steps:
 3. **Surrogate model training** — trains a small neural network to predict the profile directly from the physical conditions, without solving the physics equations.
 4. **Evaluation** — compares the surrogate's predictions against the true simulation results and reports accuracy metrics and plots.
 
+Configuration is managed with [Hydra](https://hydra.cc/): every parameter (physics ranges, sampling size, network architecture, training schedule) lives in a YAML file under `configs/` and can be overridden from the command line without touching code. Training runs are logged to [Weights & Biases](https://wandb.ai/).
+
 ## Project structure
 
 ```
-src/diffusion_degradation/
-├── solver.py         # analytical + numerical physics solver
-├── generate_data.py  # synthetic dataset generation
-├── model.py          # neural network architecture
-├── train.py          # training loop
-└── evaluate.py       # evaluation and plots
+configs/
+├── config.yaml               # top-level config (paths, wandb, hydra settings)
+├── simulation/                # physics domain parameters
+├── sampling/                  # dataset sampling parameters
+└── training/                  # model + optimization parameters
 
-notebooks/     # exploration notebook
-outputs/       # generated dataset, trained model, metrics, figures
+data/synthetic/
+├── solver.py                  # analytical + numerical physics solver
+└── generate.py                # synthetic dataset generation logic
+
+models/
+├── mlp.py                     # neural network architecture
+├── losses.py                  # loss functions
+└── metrics.py                 # MAE / RMSE / R2
+
+training/
+├── trainer.py                 # training loop (+ wandb logging)
+├── callbacks.py                # early stopping
+└── utils.py                    # data split, normalization, dataloaders
+
+evaluation/
+├── evaluator.py                # reload a checkpoint and score it
+└── visualizer.py                # true-vs-predicted plots
+
+utils/            # general helpers (e.g. reproducibility seeding)
+notebooks/        # exploration notebook
+outputs/          # generated dataset, trained model, metrics, figures
+
+generate_data.py  # entry point: build the synthetic dataset
+train.py          # entry point: train the surrogate
+evaluate.py       # entry point: evaluate a trained surrogate
+setup.py
 ```
 
 ## Installation
 
 ```bash
 pip install -r requirements.txt
+# or, to install the project as a package:
+pip install -e .
 ```
 
-Requires numpy, torch, and matplotlib.
+Requires numpy, torch, matplotlib, hydra-core, omegaconf, and wandb (run `wandb login` once if you haven't already).
 
 ## Usage
 
-Run all commands from `src/diffusion_degradation/`:
+All commands run from the repository root. Any config value can be overridden on the command line (Hydra syntax: `group.key=value`).
 
 ```bash
-cd src/diffusion_degradation
-
 # 1. Check the solver (compares analytical vs numerical solution)
-python3 solver.py
+python3 data/synthetic/solver.py
 
 # 2. Generate a synthetic dataset
-python3 generate_data.py --n_conditions 2000 --n_times 8 --out ../../outputs/dataset.npz
+python3 generate_data.py sampling.n_conditions=2000 sampling.n_times=8
 
-# 3. Train the surrogate model
-python3 train.py --dataset ../../outputs/dataset.npz --epochs 200
+# 3. Train the surrogate model (logs to Weights & Biases by default)
+python3 train.py training.epochs=200
+python3 train.py wandb.enabled=false   # to disable logging
 
 # 4. Evaluate the trained model
-python3 evaluate.py --dataset ../../outputs/dataset.npz
+python3 evaluate.py
 ```
 
 This produces a trained model checkpoint, training history, test metrics, and comparison plots in `outputs/`.

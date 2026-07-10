@@ -1,0 +1,11 @@
+hidden_dims: [256, 256, 256]
+activation: gelu   # relu | gelu
+loss: mse          # mse | l1 | smooth_l1
+
+epochs: 200
+batch_size: 256
+lr: 1.0e-3
+patience: 20
+seed: 42
+device: cpu
+split: [0.70, 0.15, 0.15]   # train / val / test

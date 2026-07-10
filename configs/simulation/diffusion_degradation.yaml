@@ -1,0 +1,12 @@
+# Physical domain: 1D diffusion-decay equation
+#   dc/dt = D * d2c/dx2 - r * c ,  x in [0, L]
+name: diffusion_degradation
+
+c0_range: [0.01, 10.0]      # arbitrary concentration unit (e.g. nM)
+D_range: [1.0, 50.0]        # um^2/s
+r_range: [1.0e-6, 1.0e-3]   # 1/s (decay / loss rate)
+
+L: 150.0                    # um, domain length
+nx: 100                     # spatial grid points
+t_max: 259200.0             # 3 days, in seconds
+n_modes: 150                # eigenfunction modes for the analytical solution

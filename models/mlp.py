@@ -1,6 +1,8 @@
 """MLP surrogate: (log10 c0, log10 D, log10 r, t) -> C(x, t) profile."""
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import torch
 from torch import nn
 
@@ -12,7 +14,7 @@ class MLPSurrogate(nn.Module):
         self,
         input_dim: int = 4,
         output_dim: int = 100,
-        hidden_dims: tuple[int, ...] = (256, 256, 256),
+        hidden_dims: Sequence[int] = (256, 256, 256),
         activation: str = "gelu",
     ):
         super().__init__()

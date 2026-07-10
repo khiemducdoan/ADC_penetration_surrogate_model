@@ -1,0 +1,5 @@
+# How the synthetic dataset is sampled from the simulation's parameter space
+n_conditions: 2000   # number of (c0, D, r) triples to sample (100000 for a full run)
+n_times: 8            # time points per condition
+seed: 0
+validate_frac: 0.01   # fraction of conditions cross-checked against the FDM solver
