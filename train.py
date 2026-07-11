@@ -17,6 +17,9 @@ import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
 
+from evaluation.evaluator import Evaluator
+from evaluation.physics_checks import benchmark_inference_speed, run_all_checks
+from evaluation.visualizer import plot_profiles, plot_scatter
 from models.losses import get_loss
 from models.metrics import compute_metrics
 from models.mlp import MLPSurrogate
@@ -85,11 +88,6 @@ def main(cfg: DictConfig) -> None:
     print("Test metrics (log-space):   ", metrics_log)
     print("Test metrics (physical units):", metrics_phys)
 
-    if use_wandb:
-        wandb.log({f"test/log_{k}": v for k, v in metrics_log.items()})
-        wandb.log({f"test/phys_{k}": v for k, v in metrics_phys.items()})
-        wandb.finish()
-
     checkpoint = {
         "model_state": model.state_dict(),
         "hidden_dims": tuple(cfg.training.hidden_dims),
@@ -101,14 +99,50 @@ def main(cfg: DictConfig) -> None:
         "eps": EPS,
         "train_idx": train_idx, "val_idx": val_idx, "test_idx": test_idx,
     }
-    torch.save(checkpoint, out_dir / "surrogate_model.pt")
+    checkpoint_path = out_dir / "surrogate_model.pt"
+    torch.save(checkpoint, checkpoint_path)
+    print(f"Saved checkpoint to {checkpoint_path}")
+
+    # --- baseline evaluation report: regime-conditional error, physics
+    # consistency (BC/monotonicity/non-negativity/steady-state), extrapolation
+    # gap, and inference speed -- see evaluation/physics_checks.py ---
+    x_grid, L = data["x_grid"], float(data["L"])
+    evaluator = Evaluator(str(checkpoint_path), device=cfg.training.device)
+    physics_metrics = run_all_checks(
+        evaluator, X[test_idx], Y[test_idx], pred_phys, x_grid, L,
+        sim_cfg=cfg.simulation, sampling_cfg=cfg.sampling,
+    )
+    speed_metrics = benchmark_inference_speed(
+        model, Xn[test_idx][: min(256, len(test_idx))], device=cfg.training.device,
+    )
+    print("Physics/regime checks:", json.dumps(physics_metrics, indent=2))
+    print("Inference speed:", speed_metrics)
+
+    figures_dir = out_dir / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+    profiles_path = plot_profiles(x_grid, X[test_idx], Y[test_idx], pred_phys, figures_dir / "profiles_true_vs_pred.png")
+    scatter_path = plot_scatter(Y[test_idx], pred_phys, metrics_phys["R2"], figures_dir / "scatter_true_vs_pred.png")
+
+    if use_wandb:
+        wandb.log({f"test/log_{k}": v for k, v in metrics_log.items()})
+        wandb.log({f"test/phys_{k}": v for k, v in metrics_phys.items()})
+        wandb.log(physics_metrics)
+        wandb.log({f"speed/{k}": v for k, v in speed_metrics.items()})
+        wandb.log({
+            "figures/profiles_true_vs_pred": wandb.Image(str(profiles_path)),
+            "figures/scatter_true_vs_pred": wandb.Image(str(scatter_path)),
+        })
+        wandb.finish()
 
     with open(out_dir / "training_history.json", "w") as f:
         json.dump(history, f, indent=2)
     with open(out_dir / "test_metrics.json", "w") as f:
-        json.dump({"log_space": metrics_log, "physical_units": metrics_phys}, f, indent=2)
-
-    print(f"Saved checkpoint to {out_dir / 'surrogate_model.pt'}")
+        json.dump({
+            "log_space": metrics_log,
+            "physical_units": metrics_phys,
+            "physics_checks": physics_metrics,
+            "inference_speed": speed_metrics,
+        }, f, indent=2)
 
 
 if __name__ == "__main__":
