@@ -75,7 +75,8 @@ def main(cfg: DictConfig) -> None:
 
     model.eval()
     with torch.no_grad():
-        pred_test_n = model(torch.tensor(Xn[test_idx], dtype=torch.float32)).cpu().numpy()
+        X_test = torch.tensor(Xn[test_idx], dtype=torch.float32).to(trainer.device)
+        pred_test_n = model(X_test).cpu().numpy()
     pred_log = pred_test_n * y_std + y_mean
     pred_phys = np.exp(pred_log) - EPS
 
