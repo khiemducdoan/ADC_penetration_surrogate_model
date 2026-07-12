@@ -10,3 +10,4 @@ outputs/hydra/
 
 # Weights & Biases local run logs
 wandb/
+save_images/
