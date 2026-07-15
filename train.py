@@ -43,8 +43,11 @@ def main(cfg: DictConfig) -> None:
     data = np.load(cfg.dataset_path)
     X, Y = data["X"], data["Y"]
     n = X.shape[0]
+    condition_id = data["condition_id"]
 
-    train_idx, val_idx, test_idx = split_indices(n, cfg.training.seed, tuple(cfg.training.split))
+    train_idx, val_idx, test_idx = split_indices(
+        n, cfg.training.seed, tuple(cfg.training.split), groups=condition_id,
+    )
     Xn, x_mean, x_std = normalize_inputs(X, train_idx)
     Yn, Ylog, y_mean, y_std = normalize_targets(Y, train_idx)
 

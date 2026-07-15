@@ -1,0 +1,33 @@
+{
+  "log_space": {
+    "MAE": 0.13932385287504864,
+    "RMSE": 0.3465910796802617,
+    "R2": 0.9816307302541226
+  },
+  "physical_units": {
+    "MAE": 0.07723380092876611,
+    "RMSE": 0.18848311785866714,
+    "R2": 0.9897818241124431
+  },
+  "physics_checks": {
+    "regime/t_bin0_[2.6e+02,1.9e+03]": 0.08328711339078464,
+    "regime/t_bin1_[1.9e+03,3.6e+04]": 0.0668633501163431,
+    "regime/t_bin2_[3.6e+04,2.6e+05]": 0.08356871009984346,
+    "regime/lambdaL_bin0_[0.28,1.69]": 0.08105159282118472,
+    "regime/lambdaL_bin1_[1.69,5.44]": 0.09679007118362946,
+    "regime/lambdaL_bin2_[5.44,40.66]": 0.05385973878148418,
+    "physics/bc_dirichlet_mean_rel_err": 0.047308492720288246,
+    "physics/bc_dirichlet_max_rel_err": 0.24805924939909793,
+    "physics/bc_neumann_mean_abs_flux": 0.010742612036156897,
+    "physics/frac_negative": 0.00010833333333333333,
+    "physics/min_value": -2.128345149400563e-09,
+    "physics/frac_non_monotonic": 0.6483333333333333,
+    "physics/steady_state_max_rel_err": 0.08483505325607912,
+    "extrapolation/extrapolation_mae": 0.5333295117736112,
+    "extrapolation/extrapolation_gap_ratio": 6.905389937567737
+  },
+  "inference_speed": {
+    "inference_time_s_per_batch": 0.00028794599984394154,
+    "inference_throughput_profiles_per_s": 889055.5872932586
+  }
+}

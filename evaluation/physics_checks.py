@@ -156,7 +156,7 @@ def extrapolation_gap(evaluator, sim_cfg, sampling_cfg, in_range_mae: float, exp
     sampling_expanded = SimpleNamespace(
         n_conditions=n_conditions, n_times=4, seed=123, validate_frac=0.0,
     )
-    X_ext, Y_ext, _, _ = build_dataset(expanded_cfg, sampling_expanded)
+    X_ext, Y_ext, _, _, _ = build_dataset(expanded_cfg, sampling_expanded)
 
     y_pred_ext = evaluator.predict(X_ext)
     mae_ext = float(np.mean(np.abs(Y_ext - y_pred_ext)))

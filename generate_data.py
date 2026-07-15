@@ -18,13 +18,13 @@ from data.synthetic.generate import build_dataset
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def main(cfg: DictConfig) -> None:
-    X, Y, x_grid, t_points = build_dataset(cfg.simulation, cfg.sampling)
+    X, Y, x_grid, t_points, condition_id = build_dataset(cfg.simulation, cfg.sampling)
 
     out_path = Path(cfg.dataset_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(
         out_path,
-        X=X, Y=Y, x_grid=x_grid, t_points=t_points,
+        X=X, Y=Y, x_grid=x_grid, t_points=t_points, condition_id=condition_id,
         c0_range=cfg.simulation.c0_range, D_range=cfg.simulation.D_range,
         r_range=cfg.simulation.r_range, L=cfg.simulation.L,
     )

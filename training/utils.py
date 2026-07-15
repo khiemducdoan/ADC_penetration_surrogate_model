@@ -1,8 +1,12 @@
 """Data splitting, normalization, and DataLoader helpers for training.
 
-Split is a plain random split at the row level (70/15/15 by default): every
-row already corresponds to one (params, t) pair, so rows are i.i.d. given the
-sampling scheme in data/synthetic/generate.py.
+Split is group-aware (70/15/15 by default): the n_times rows of a single
+(c0, D, r) condition are correlated (same trajectory, different t only), so
+splitting at the row level would leak a condition's dynamics into training
+via other t values of the very condition later shown at test time, and
+inflate test R2 into pure time-interpolation rather than a genuine test of
+generalization to unseen physical conditions. Splitting whole condition
+groups into train/val/test avoids that.
 
 Targets are normalized in log-space (log(C + eps), then standardized) since
 concentration spans many orders of magnitude.
@@ -16,14 +20,34 @@ from torch.utils.data import DataLoader, TensorDataset
 EPS = 1e-8
 
 
-def split_indices(n: int, seed: int, fracs=(0.70, 0.15, 0.15)):
+def split_indices(n: int, seed: int, fracs=(0.70, 0.15, 0.15), groups: np.ndarray | None = None):
+    """Split `n` row indices into train/val/test.
+
+    If `groups` is given (one group id per row, e.g. condition_id), the split
+    is done at the group level so all rows of a group land in the same split
+    - required whenever rows within a group are correlated. Otherwise falls
+    back to a plain row-level random split.
+    """
     rng = np.random.default_rng(seed)
-    idx = rng.permutation(n)
-    n_train = int(fracs[0] * n)
-    n_val = int(fracs[1] * n)
-    train_idx = idx[:n_train]
-    val_idx = idx[n_train:n_train + n_val]
-    test_idx = idx[n_train + n_val:]
+
+    if groups is None:
+        idx = rng.permutation(n)
+        n_train = int(fracs[0] * n)
+        n_val = int(fracs[1] * n)
+        return idx[:n_train], idx[n_train:n_train + n_val], idx[n_train + n_val:]
+
+    unique_groups = rng.permutation(np.unique(groups))
+    n_g = len(unique_groups)
+    n_train_g = int(fracs[0] * n_g)
+    n_val_g = int(fracs[1] * n_g)
+    train_groups = set(unique_groups[:n_train_g])
+    val_groups = set(unique_groups[n_train_g:n_train_g + n_val_g])
+    test_groups = set(unique_groups[n_train_g + n_val_g:])
+
+    row_idx = np.arange(n)
+    train_idx = row_idx[np.isin(groups, list(train_groups))]
+    val_idx = row_idx[np.isin(groups, list(val_groups))]
+    test_idx = row_idx[np.isin(groups, list(test_groups))]
     return train_idx, val_idx, test_idx
 
 

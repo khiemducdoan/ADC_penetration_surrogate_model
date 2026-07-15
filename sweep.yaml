@@ -12,8 +12,8 @@ program: train.py
 project: adc-penetration-surrogate
 method: bayes
 metric:
-  name: test/phys_R2
-  goal: maximize
+  name: test/test_RMSE
+  goal: minimize
 parameters:
   training.lr:
     values: [0.0001, 0.0005, 0.001, 0.005]

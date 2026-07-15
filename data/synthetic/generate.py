@@ -8,6 +8,11 @@ surrogate:
 
     X = (log10 c0, log10 D, log10 r, t)   ->   y = C(x, t)  on a fixed grid x
 
+Also returns `condition_id`, tagging each row with which (c0, D, r) condition
+it came from - the n_times rows of one condition are correlated (same
+trajectory, different t), so a downstream train/val/test split must keep all
+of a condition's rows in the same split (see training.utils.split_indices).
+
 A random subset is cross-checked against the Crank-Nicolson FDM solver
 (solver.fdm_crank_nicolson) to confirm the analytical solution is being
 evaluated correctly before it is used to label many conditions blindly.
@@ -41,15 +46,21 @@ def build_dataset(sim_cfg, sampling_cfg):
 
     X = np.empty((n_conditions * n_times, 4), dtype=np.float64)
     Y = np.empty((n_conditions * n_times, nx), dtype=np.float64)
+    # Which condition each row came from. All n_times rows of one condition
+    # share a value here - needed for a group-aware train/val/test split, since
+    # those rows are highly correlated (same physical trajectory, different t)
+    # and are not i.i.d. the way a naive row-level split assumes.
+    condition_id = np.empty(n_conditions * n_times, dtype=np.int64)
 
     row = 0
-    for c0, D, r in zip(c0_vals, D_vals, r_vals):
+    for cond_idx, (c0, D, r) in enumerate(zip(c0_vals, D_vals, r_vals)):
         profiles = analytical_transient_profile(
             x_grid, t_points, D, r, c0, L, n_modes=sim_cfg.n_modes
         )  # (nx, n_times)
         for j, t in enumerate(t_points):
             X[row] = (np.log10(c0), np.log10(D), np.log10(r), t)
             Y[row] = profiles[:, j]
+            condition_id[row] = cond_idx
             row += 1
 
     # Cross-check a random subset against the independent FDM solver. Capped
@@ -71,4 +82,4 @@ def build_dataset(sim_cfg, sampling_cfg):
     print(f"[validation] analytical vs FDM, worst-case relative error over "
           f"{n_check} sampled conditions: {max_rel_err:.3e}")
 
-    return X, Y, x_grid, t_points
+    return X, Y, x_grid, t_points, condition_id
