@@ -57,17 +57,40 @@ We will find `λ` re-appearing explicitly in the steady-state solution (Step 2) 
 
 **Strategy for the full problem.** The PDE is linear with a *time-independent* inhomogeneous boundary condition (`c(0,t)=c₀` for all `t`). This is the classical setting for splitting the solution into a **steady part** (satisfies the PDE and both boundary conditions, no time dependence) plus a **transient part** (decays to zero, absorbs the initial condition mismatch). We build the steady part first.
 
-Set `∂c/∂t = 0` in the PDE:
+**Where the boundary conditions for `c_ss` come from.** The original BCs `c(0,t)=c_0` and `∂c/∂x|_{x=L}=0` hold for *every* `t ≥ 0` — the source concentration at the wall never changes, and the no-flux plane at `x=L` is a permanent symmetry condition. `c_ss` is defined as the value `c(x,t)` settles to once time-dependence has died out, so it is itself one particular instance of `c(x,t)` (namely, in the `t → ∞` limit). Since the two BCs are true at *every* `t`, they remain true in that limit as well:
+
+$$
+c(0,t) = c_0\ \ \forall t \;\Longrightarrow\; c_{ss}(0) = c_0, \qquad
+\left.\frac{\partial c}{\partial x}\right|_{x=L} = 0\ \ \forall t \;\Longrightarrow\; c_{ss}'(L) = 0 .
+$$
+
+No new physics is introduced here — `c_ss` simply inherits, unchanged, the same two conditions the full solution `c(x,t)` was already required to satisfy.
+
+Set `∂c/∂t = 0` in the PDE (this is literally the definition of "steady state": concentration no longer changes with time at any `x`), which removes `t` entirely and leaves an ODE purely in `x`:
 
 $$
 D\,c_{ss}''(x) - r\,c_{ss}(x) = 0, \qquad c_{ss}(0) = c_0,\quad c_{ss}'(L) = 0 .
 $$
 
-This is a constant-coefficient linear ODE. Its characteristic equation `D k² - r = 0` gives `k = ±1/λ` with `λ = √(D/r)` from Step 1, so the general solution is
+**Solving the ODE — from characteristic equation to general solution.** This is a constant-coefficient, linear, homogeneous, second-order ODE, so we try an exponential ansatz `c_ss(x) = e^{kx}` (exponentials are the natural guess because their derivatives are proportional to themselves, matching the structure of every term in the equation). Then `c_ss''(x) = k^2 e^{kx}`, and substituting into the ODE:
+
+$$
+D\,k^2 e^{kx} - r\,e^{kx} = 0 \;\Longrightarrow\; e^{kx}\left(Dk^2 - r\right) = 0 .
+$$
+
+Since `e^{kx} ≠ 0` for any `x`, the only way this can hold is if the bracketed factor vanishes — this is the **characteristic equation**:
+
+$$
+Dk^2 - r = 0 \;\Longrightarrow\; k^2 = \frac{r}{D} \;\Longrightarrow\; k = \pm\sqrt{\frac{r}{D}} = \pm\frac{1}{\lambda}, \qquad \lambda = \sqrt{D/r}\ \text{ from Step 1.}
+$$
+
+It turns a differential equation into an algebraic one for `k`. With two distinct real roots `k=+1/λ` and `k=-1/λ`, the general solution is the linear combination `c_ss(x) = C_1 e^{x/\lambda} + C_2 e^{-x/\lambda}`. Re-expressing this basis via `cosh(u)=(e^u+e^{-u})/2`, `sinh(u)=(e^u-e^{-u})/2` (a pure change of basis — any `C_1, C_2` maps to some `A, B` and vice versa) gives an equivalent, more convenient form:
 
 $$
 c_{ss}(x) = A\cosh(x/\lambda) + B\sinh(x/\lambda).
 $$
+
+The reason to prefer this form: `cosh(0)=1` and `sinh(0)=0`, so applying the boundary condition at `x=0` below collapses immediately instead of requiring a 2×2 solve.
 
 **Apply `c_ss(0) = c₀`:** since `cosh(0)=1, sinh(0)=0`, this gives `A = c₀`.
 
