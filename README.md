@@ -19,6 +19,15 @@ The pipeline has four steps:
 
 Configuration is managed with [Hydra](https://hydra.cc/): every parameter (physics ranges, sampling size, network architecture, training schedule) lives in a YAML file under `configs/` and can be overridden from the command line without touching code. Training runs are logged to [Weights & Biases](https://wandb.ai/).
 
+## Beyond the 1D case: the Thurber/Krogh-cylinder model
+
+`data/synthetic/krogh_solver.py` solves the fuller, nonlinear physics this 1D problem was a first approximation to: the Krogh-cylinder model of Thurber, Zajic & Wittrup (2007) / Thurber & Wittrup (2012), tracking free antibody, antibody-antigen complex, and free antigen as three coupled fields in radial (cylindrical) coordinates, with a permeability-limited (Robin) boundary condition driven by a time-varying plasma PK curve. It has no closed-form solution, so it's solved numerically by the method of lines (conservative finite-volume discretization in `r`, stiff implicit time integration in `t`), validated both by grid-refinement and by comparison to Thurber & Wittrup's closed-form compartmental (0D) reduction. See [`docs/THURBER_KROGH_PDE_MATH.md`](docs/THURBER_KROGH_PDE_MATH.md) for the full derivation.
+
+```bash
+python3 data/synthetic/krogh_solver.py          # solve + print convergence/validation self-checks
+python3 -m data.synthetic.krogh_visualize        # generate figures into outputs/figures/krogh/
+```
+
 ## Project structure
 
 ```
@@ -29,8 +38,10 @@ configs/
 └── training/                  # model + optimization parameters
 
 data/synthetic/
-├── solver.py                  # analytical + numerical physics solver
-└── generate.py                # synthetic dataset generation logic
+├── solver.py                  # 1D analytical + numerical physics solver
+├── krogh_solver.py             # Thurber/Krogh-cylinder spatial PDE solver (numerical, method of lines)
+├── krogh_visualize.py          # figure generation for the Krogh-cylinder solver
+└── generate.py                 # synthetic dataset generation logic (1D model)
 
 models/
 ├── mlp.py                     # neural network architecture
